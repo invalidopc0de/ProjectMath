@@ -1,0 +1,1 @@
+/usr/bin/c++   -g  -fPIC CMakeFiles/projectwork.dir/main.cpp.o CMakeFiles/projectwork.dir/src/geometry.cpp.o  -o projectwork -rdynamic 

@@ -1,0 +1,9 @@
+build/CMakeCache.txt
+build/CMakeFiles/CompilerIdC/CMakeCCompilerId.c
+build/CMakeFiles/CompilerIdCXX/CMakeCXXCompilerId.cpp
+build/CMakeFiles/projectwork.dir/link.txt
+CMakeLists.txt
+main.cpp
+mathhelper.h
+src/geometry.cpp
+src/geometry.h

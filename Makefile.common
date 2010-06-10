@@ -1,0 +1,490 @@
+	##################################################################
+	# If you just want to look at how the sample programs are built, #
+	# consult Makefiles.samples instead of this file.                #
+	##################################################################
+
+#//////////////////////////////////////////////////////////////////////////
+# Filename:	Makefile.common
+# Author:	Ron Burkey
+# Purpose:	Defines for various variables used in common between the
+#		other Makefiles.
+# Mods:		20080513 RSB	Adapted from Makefile and Makefile.macosx.
+#		20080519 RSB	Oops!  Messed up the rules for downloading
+#				the Mac OS X headers.
+#		20090208 RSB	All GTK+ stuff completely revised, 
+#				principally to avoid the problem of 
+#				non-persistence of the GTK+ bundles on
+#				the web.
+#		20090215 RSB	Added auto-adjustment of wxWidgets unicode
+#				vs. ansi.
+#		20090221 RSB	Added Makefile.override-settings
+#		20090417 RSB	Added readline and (for Win32) curses.
+#		20090424 RSB	... but not really.  I mean, I leave the
+#				readline and curse stuff in place, but don't
+#				install it.  A readline binary bundle for 
+#				Win32 is installed instead.
+#
+#  This file has been placed in the public domain by its author (Ron Burkey).
+
+
+# This is a dummy target whose sole purpose is to make sure that none of the
+# rules included in this file is executed as the default rule if one simply
+# does 'make'.  It assumes that the first rule in any file including this 
+# file is called "default".
+default-common: default
+
+
+#//////////////////////////////////////////////////////////////////////////
+# Definitions of various variables.
+
+# Makefile.custom-settings is a place where you can store persistent 
+# customizations of your own.  $LEVEL is blank for the core IMCROSS Makefiles,
+# but is "../../" for the Contributed Makefiles, reflecting the fact that
+# they are two directory levels lower than the location of the settings
+# Makefiles.
+-include ${LEVEL}Makefile.custom-settings
+ifdef CUSTOMIZED
+CUSTOM_SETTINGS=customized
+else
+CUSTOM_SETTINGS=default
+include ${LEVEL}Makefile.default-settings
+endif
+-include ${LEVEL}Makefile.override-settings
+
+# I wouldn't recommend experimenting with anything below this.
+
+ifeq "${OVERRIDE_STATIC_VS_SHARED}" "static"
+WX_SHARED_SWITCH=--disable-shared
+endif
+ifeq "${OVERRIDE_STATIC_VS_SHARED}" "shared"
+WX_SHARED_SWITCH=--enable-shared
+endif
+
+# Undefine all NO_XXX variables which have the value "no"
+ifeq "no" "${NO_FORTRAN}"
+NO_FORTRAN=
+endif
+ifeq "no" "${NO_OBJC}"
+NO_OBJC=
+endif
+ifeq "no" "${NO_MAC}"
+NO_MAC=
+endif
+ifeq "no" "${NO_GTK}"
+NO_GTK=
+endif
+ifeq "no" "${NO_WXWIDGETS}"
+NO_WXWIDGETS=
+endif
+ifeq "no" "${NO_FLTK}"
+NO_FLTK=
+endif
+ifeq "no" "${NO_LIBXML2}"
+NO_LIBXML2=
+endif
+ifeq "no" "${NO_ALLEGRO}"
+NO_ALLEGRO=
+endif
+ifeq "no" "${NO_JAMMER}"
+NO_JAMMER=
+endif
+ifeq "no" "${NO_old}"
+NO_old=
+endif
+ifeq "no" "${NO_SDL}"
+NO_SDL=
+endif
+ifeq "no" "${NO_libgsf}"
+NO_libgsf=
+endif
+ifeq "no" "${NO_Qt}"
+NO_Qt=
+endif
+
+# Normalize the build-type settings (ansi vs. unicode)
+# for wxWidgets.
+ifneq "ansi" "${WX_TYPE}"
+WX_TYPE=unicode
+endif
+ifeq "unicode" "${WX_TYPE}"
+WX_FLAGS="--enable-unicode"
+else
+WX_FLAGS="--disable-unicode"
+endif
+# However, we're not presently able to do a unicode 
+# build in Win32.  So if the choice is for unicode, we
+# set the FORCE_OLD_WX_TYPE variable to force the Win32
+# build to ANSI.  I think it will require gcc 4 to do 
+# the unicode build in Windows.
+ifeq "unicode" "${WX_TYPE}"
+FORCE_OLD_WX_TYPE=yes
+endif
+
+# Determines whether static libraries are the default or dynamic ones.
+# (There's no guarantee that just changing this makes the builds work.)
+STATIC_VS_SHARED=--enable-static --disable-shared
+
+# This stuff is just for helping me automate my snapshot tarballs, and
+# has nothing to do with any ordinary user.
+DATE:=`date +%Y%m%d`
+WEBSITE:=../sandroid.org/public_html/imcross
+
+# Hard-coding of directory names.  All libraries and header files
+# will be under ${INSTALL_DIR}/lib and ${INSTALL_DIR}/include.
+INSTALL_WIN32=${PREFIX_WIN32}/${TARGET_WIN32}
+SDK=${INSTALL_MACOSX}/SDKs/MacOSX${MACOSX_VERSION}.sdk
+CURRENT_DIR:=$(shell pwd)
+PATH:=${shell echo -n $$PATH}
+
+# Directories where toolchain/library binaries and libraries are stored.
+BIN_WIN32=${INSTALL_WIN32}/bin
+BIN_MACOSX=${INSTALL_MACOSX}/bin
+LIB_WIN32=${INSTALL_WIN32}/lib
+LIB_MACOSX=${INSTALL_MACOSX}/lib
+INCLUDE_WIN32=${INSTALL_WIN32}/include
+INCLUDE_MACOSX=${INSTALL_MACOSX}/include
+
+# Determines the method by which we attempt to install GTK+ on Windows.
+gtk_cottrell=yes
+
+# Hard-coding of tarball names for download.
+JAMMER_PROGRAM=InstallJammer-${JAMMER_VERSION}-Linux-x86-Install
+MINGW_RUNTIME_TARBALL=mingw-runtime-${MINGW_RUNTIME_VERSION}.tar.gz
+HEADER_BUNDLE=macosx-headers-${MACOSX_VERSION}-${XCODE_VERSION}.tar.bz2
+DEV_BUNDLE=odcctools-${CCTOOLS_VERSION}-gcc-${GCC_MACOSX}-bin.tar.bz2
+BINUTILS_TARBALL=binutils-${BINUTILS_VERSION}.tar.bz2
+GCC_TARBALL=gcc-${GCC_WIN32}.tar.bz2
+LIBXML2_TARBALL=libxml2-${LIBXML2_VERSION}.tar.gz
+PCRE_TARBALL=pcre-${PCRE_VERSION}.tar.bz2
+PTHREADS_W32_TARBALL=pthreads-w32-${PTHREADS_W32_VERSION}-release.tar.gz
+ZLIB_TARBALL=zlib-${ZLIB_VERSION}.tar.bz2
+LIBICONV_TARBALL=libiconv-${LIBICONV_VERSION}.tar.gz
+LIBXML2_TARBALL=libxml2-${LIBXML2_VERSION}.tar.gz
+FLTK_TARBALL=fltk-${FLTK_VERSION}-source.tar.bz2
+ALLEGRO_TARBALL=allegro-${ALLEGRO_VERSION}.tar.gz
+ALLEGRO_BUNDLE=allegro-mingw-${ALLEGRO_VERSION}.zip
+READLINE_TARBALL=readline-${READLINE_VERSION}.tar.gz
+CURSES_TARBALL=PDCurses-${CURSES_VERSION}.tar.gz
+READLINE_BUNDLE=readline-${READLINE_BUNDLE_VERSION}-bin.zip
+
+# The naming of wxWidgets tarballs is pretty complex.
+WXWIDGETS_VERSION=${WXVER}.${WXMINOR}
+WXROOT_MAC=wxMac
+W32API_TARBALL=w32api-${W32API_VERSION}.tar.gz
+ifeq (${WXVER},2.2)
+WXROOT_WIN=wxWindows
+WXTAR=wxAll
+endif
+ifeq (${WXVER},2.3)
+WXROOT_WIN=wxWindows
+WXTAR=wxAll
+endif
+ifeq (${WXVER},2.4)
+WXROOT_WIN=wxWindows
+WXTAR=wxAll
+endif
+ifndef WXROOT
+WXROOT_WIN=wxWidgets
+endif
+ifndef WXTAR
+WXTAR=wxWidgets
+endif
+WXTARBALL_WIN32=${WXTAR}-${WXWIDGETS_VERSION}.tar.gz
+WXTARBALL_MACOSX=${WXROOT_MAC}-${WXWIDGETS_VERSION}.tar.gz
+ifdef WX_XCODE_VERSION
+WX_XCODE_TARBALL=wxWidgets-${WX_XCODE}.tar.gz
+endif
+
+############################################################
+# This bunch of GTK+ stuff is used only for binary downloads, 
+# mostly for Windows.  See http://www.gtk.org/download-windows.html.
+# It defines the names of the files that need to be downloaded.
+
+GLIB_BIN_BUNDLE=glib_${GLIB_MAJOR}.${GLIB_MINOR}_win32.zip
+GLIB_DEV_BUNDLE=glib-dev_${GLIB_MAJOR}.${GLIB_MINOR}_win32.zip
+GTK_BIN_BUNDLE=gtk+_${GTK_MAJOR}.${GTK_MINOR}_win32.zip
+GTK_DEV_BUNDLE=gtk+-dev_${GTK_MAJOR}.${GTK_MINOR}_win32.zip
+PANGO_BIN_BUNDLE=pango_${PANGO_MAJOR}.${PANGO_MINOR}_win32.zip
+PANGO_DEV_BUNDLE=pango-dev_${PANGO_MAJOR}.${PANGO_MINOR}_win32.zip
+ATK_BIN_BUNDLE=atk_${ATK_MAJOR}.${ATK_MINOR}_win32.zip
+ATK_DEV_BUNDLE=atk-dev_${ATK_MAJOR}.${ATK_MINOR}_win32.zip
+CAIRO_BIN_BUNDLE=cairo_${CAIRO_MAJOR}.${CAIRO_MINOR}_win32.zip
+CAIRO_DEV_BUNDLE=cairo-dev_${CAIRO_MAJOR}.${CAIRO_MINOR}_win32.zip
+# zlib is installed separately from gtk+.
+# iconv is installed separately from gtk+.
+GETTEXT_BIN_BUNDLE=gettext-runtime-${GETTEXT_VERSION}.zip
+GETTEXT_DEV_BUNDLE=gettext-runtime-dev-${GETTEXT_VERSION}.zip
+LIBPNG_BIN_BUNDLE=libpng_${LIBPNG_VERSION}_win32.zip
+LIBPNG_DEV_BUNDLE=libpng-dev_${LIBPNG_VERSION}_win32.zip
+LIBJPEG_BIN_BUNDLE=jpeg-${LIBJPEG_VERSION}-bin.zip
+LIBJPEG_DEV_BUNDLE=jpeg-${LIBJPEG_VERSION}-lib.zip
+LIBTIFF_BIN_BUNDLE=libtiff-${LIBTIFF_VERSION}.zip
+LIBTIFF_DEV_BUNDLE=libtiff-dev-${LIBTIFF_VERSION}.zip
+PKGCONFIG_BIN_BUNDLE=pkg-config-${PKGCONFIG_VERSION}.zip
+FREETYPE_BIN_BUNDLE=freetype-${FREETYPE_VERSION}.zip
+FREETYPE_DEV_BUNDLE=freetype-dev-${FREETYPE_VERSION}.zip
+FONTCONFIG_BIN_BUNDLE=fontconfig-${FONTCONFIG_VERSION}.zip
+FONTCONFIG_DEV_BUNDLE=fontconfig-dev-${FONTCONFIG_VERSION}.zip
+EXPAT_BIN_BUNDLE=expat-${EXPAT_VERSION}.zip
+DIRENT_DEV_BUNDLE=dirent.zip
+PROXYLIBINTL_BIN_BUNDLE=proxy-libintl-${PROXYLIBINTL_VERSION}.zip
+# For Mac.
+GTK_MAC_BUNDLE=mac-gtk+-${GTK_MAC_VERSION}.tar.bz2
+
+GTK_WIN32_BUNDLES=\
+	${GLIB_BIN_BUNDLE} \
+	${GLIB_DEV_BUNDLE} \
+	${GTK_BIN_BUNDLE} \
+	${GTK_DEV_BUNDLE} \
+	${PANGO_BIN_BUNDLE} \
+	${PANGO_DEV_BUNDLE} \
+	${ATK_BIN_BUNDLE} \
+	${ATK_DEV_BUNDLE} \
+	${CAIRO_BIN_BUNDLE} \
+	${CAIRO_DEV_BUNDLE} \
+	${GETTEXT_BIN_BUNDLE} \
+	${GETTEXT_DEV_BUNDLE} \
+	${LIBPNG_BIN_BUNDLE} \
+	${LIBPNG_DEV_BUNDLE} \
+	${LIBJPEG_BIN_BUNDLE} \
+	${LIBJPEG_DEV_BUNDLE} \
+	${LIBTIFF_BIN_BUNDLE} \
+	${LIBTIFF_DEV_BUNDLE} \
+	${PKGCONFIG_BIN_BUNDLE} \
+	${FREETYPE_BIN_BUNDLE} \
+	${FREETYPE_DEV_BUNDLE} \
+	${FONTCONFIG_BIN_BUNDLE} \
+	${FONTCONFIG_DEV_BUNDLE} \
+	${EXPAT_BIN_BUNDLE} \
+	${DIRENT_DEV_BUNDLE} \
+	${PROXYLIBINTL_BIN_BUNDLE}
+# Same list, but with setup_ prefixed to each one.	
+GTK_WIN32_SETUPS=$(patsubst %,setup_%,${GTK_WIN32_BUNDLES})
+
+# Rules for downloading tarballs:
+
+# Targets for downloading of tarballs (source) and zipfiles (binaries).
+			
+${INSTALL_WIN32}:
+	${SUDOWIN} mkdir -p ${INSTALL_WIN32}
+
+${BUILD_DIR}:
+	mkdir -p ${BUILD_DIR}
+
+
+# Targets for downloading source files.  Note that the URLs are hard-coded.
+
+${BINUTILS_TARBALL}:
+	wget ftp://ftp.gnu.org/gnu/binutils/$@
+
+${GCC_TARBALL}:
+	wget ftp://ftp.gnu.org/gnu/gcc/gcc-${GCC_WIN32}/$@
+
+${LIBXML2_TARBALL}:
+	wget ftp://xmlsoft.org/libxml2/$@
+
+${MINGW_RUNTIME_TARBALL}:
+	wget http://downloads.sourceforge.net/mingw/$@
+
+${W32API_TARBALL}:
+	wget http://downloads.sourceforge.net/mingw/$@
+
+${WXTARBALL_WIN32}:
+	wget http://prdownloads.sourceforge.net/wxwindows/$@
+
+ifneq "${WXSTRCONV}" ""
+${WXSTRCONV}:
+	wget http://www.sandroid.org/imcross/${WXSTRCONV}
+endif
+
+ifdef WX_XCODE_TARBALL
+${WX_XCODE_TARBALL}:
+	wget http://www.opensource.apple.com/darwinsource/${WX_XCODE_LOCATION}/wxWidgets-${WX_XCODE}/
+endif
+
+${PCRE_TARBALL}:
+	wget ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/$@
+
+${PTHREADS_W32_TARBALL}:
+	wget ftp://sourceware.org/pub/pthreads-win32/$@
+
+${ZLIB_TARBALL}:
+	wget http://www.zlib.net/$@
+
+${LIBICONV_TARBALL}:
+	wget http://www.gimp.org/~tml/gimp/win32/$@
+
+${JAMMER_PROGRAM}:
+	#wget http://downloads.sourceforge.net/installjammer/$@
+	wget http://downloads.installjammer.com/installjammer/1.2/$@
+
+${ALLEGRO_BUNDLE}:
+	wget http://downloads.sourceforge.net/alleg/$@
+
+${ALLEGRO_TARBALL}:
+	wget http://prdownloads.sourceforge.net/alleg/$@
+	
+${FLTK_TARBALL}:
+	wget ftp://ftp.easysw.com/pub/fltk/${FLTK_VERSION}/$@
+
+${READLINE_BUNDLE}:
+	wget http://softlayer.dl.sourceforge.net/sourceforge/gnuwin32/$@
+
+${READLINE_TARBALL}:
+	wget ftp://ftp.gnu.org/gnu/readline/$@
+
+${CURSES_TARBALL}:
+	wget http://softlayer.dl.sourceforge.net/sourceforge/pdcurses/$@
+
+${INSTALL_MACOSX}:
+	${SUDOMAC} mkdir -p ${INSTALL_MACOSX}
+
+# GTK+ stuff for Windows.
+
+GTK_WIN32_SITE=http://ftp.gnome.org/pub/gnome/binaries/win32
+
+${GTK_BIN_BUNDLE} ${GTK_DEV_BUNDLE}:
+	wget ${GTK_WIN32_SITE}/gtk+/${GTK_MAJOR}/$@
+
+${GLIB_BIN_BUNDLE} ${GLIB_DEV_BUNDLE}:
+	wget ${GTK_WIN32_SITE}/glib/${GLIB_MAJOR}/$@
+
+${PANGO_BIN_BUNDLE} ${PANGO_DEV_BUNDLE}:
+	wget ${GTK_WIN32_SITE}/pango/${PANGO_MAJOR}/$@
+
+${ATK_BIN_BUNDLE} ${ATK_DEV_BUNDLE}:
+	wget ${GTK_WIN32_SITE}/atk/${ATK_MAJOR}/$@
+
+${LIBJPEG_BIN_BUNDLE} ${LIBJPEG_DEV_BUNDLE}:
+	wget http://downloads.sourceforge.net/gnuwin32/$@
+
+${CAIRO_BIN_BUNDLE} ${CAIRO_DEV_BUNDLE} \
+${LIBPNG_BIN_BUNDLE} ${LIBPNG_DEV_BUNDLE} \
+${LIBTIFF_BIN_BUNDLE} ${LIBTIFF_DEV_BUNDLE} \
+${GETTEXT_BIN_BUNDLE} ${GETTEXT_DEV_BUNDLE} \
+${PKGCONFIG_BIN_BUNDLE} \
+${FREETYPE_BIN_BUNDLE} ${FREETYPE_DEV_BUNDLE} \
+${FONTCONFIG_BIN_BUNDLE} ${FONTCONFIG_DEV_BUNDLE} \
+${EXPAT_BIN_BUNDLE} \
+${PROXYLIBINTL_BIN_BUNDLE}:
+	wget ${GTK_WIN32_SITE}/dependencies/$@
+
+${DIRENT_DEV_BUNDLE}:
+	wget http://www.gimp.org/~tml/gimp/win32/${DIRENT_DEV_BUNDLE}
+
+# End of GTK+ stuff for Windows.
+
+macosx-headers-%:
+	@echo " "
+	@echo ===================================================================
+	@echo " "
+	@echo "                            NOTICE!"
+	@echo " "
+	@echo "  I'm sorry!  You must get a free account, manually download"
+	@echo "  Xcode ${XCODE_VERSION} directly from Apple, and then prepare the file"
+	@echo "  \"${HEADER_BUNDLE}\" using the instructions found"
+	@echo "  at http://www.sandroid.org/imcross/index.html#AppleLicense"
+	@echo "  before retrying 'make'.  This is needed to comply with Apple"
+	@echo "  licensing.  I apologize for the inconvenience, and it is not"
+	@echo "  in accordance with my personal wishes."
+	@echo " "
+	@echo "                                           -- Ron Burkey"
+	@echo " "
+	@echo ===================================================================
+	@echo " "
+	@abort
+
+${DEV_BUNDLE}:
+	wget http://biolpc22.york.ac.uk/pub/linux-mac-cross/$@
+
+${WXTARBALL_MACOSX}:
+	wget http://prdownloads.sourceforge.net/sourceforge/wxwindows/$@
+
+# GTK+ stuff for Mac.  I originally intended to provide a pre-prepared download
+# bundle from sandroid.org, but have now decided against it, so the notes in the
+# first part of the 'ifdef' below, which are no longer used, may not be accurate.
+# The part after the 'else' is what's actually used.
+ifdef PRE_PREPARED_BUNDLE
+
+# The ${GTK_MAC_BUNDLE} tarball is something I made manually from a pre-built
+# dmg file from www.gtk.org (actually, ftp.imendio.com/pub/imendio/gtk-osx/}.
+# As I write this, it is the *first* such available set of Mac binaries, and
+# is only a beta for gtk+ 2.14, and is only for the i386 architecture.  So 
+# clearly it will need to be replaced later.  For the sake of convenience in 
+# creating those later replacement tarballs, I'll record the basic points of
+# interest here.  
+#
+# 1.	The installation dmg file that you download actually contains 3 separate 
+#	packages for the frameworks for Gtk, GLib, and Cairo.  So what you do is 
+#	go to a Mac, extract those 3 packages from the dmg file, and then uncompress 
+#	the Archive.pax.gz files you find within those packages.  This gives you 
+#	3 directories, called Gtk.framework/, GLib.framework/, and Cairo.framework/.  
+#
+# 2.	Within those folders are directories like Headers/, Libraries/, and 
+#	Resources/dev/lib/.  I make a new blank folder called mac/, and create 
+#	directories mac/include/ and mac/lib/ within it.  I copy then copy contents 
+#	of Headers/ to mac/include/, and the contents of Libraries/ and 
+#	Resources/dev/lib/ to mac/lib/.
+#
+# 3.	The top levels of the framework directories also contain files called
+#	Gtk, GLib, and Cairo, respectively, and I copy those to mac/lib/ while
+#	renaming them libGtk.dylib, libGLib.dylib, and libCairo.dylib.
+#
+# 4.	The entire mac/ directory is then used to make a bzip2'd tarball.
+#
+# There's lots of things that could be improved about this scheme ... and I don't
+# even know yet if the executables you get from this work (though I do know that
+# they build), but this is the way it works right now.  Note that the IMCROSS 
+# script corrects various things that are already wrong with this tarball, such as
+# wrong directory references in the mac/lib/pkgconfig/*.pc files.
+
+${GTK_MAC_BUNDLE}:
+	wget http://www.sandroid.org/imcross/${GTK_MAC_BUNDLE}
+
+else
+
+GTK_FRAMEWORK=Gtk-Framework-${GTK_MAJOR}-LATEST.dmg
+
+# Download the GTK+ framework.
+${GTK_FRAMEWORK}:
+	wget http://ftp.imendio.com/pub/imendio/gtk-osx/${GTK_FRAMEWORK}
+
+# Unpack the GTK+ framwork bundle to get at the gooey center.
+${BUILD_DIR}/framework:
+	-sudo umount $@
+	-mkdir $@ &>/dev/null
+	sudo mount -t hfsplus -o loop ${GTK_FRAMEWORK} $@
+	-rm ${BUILD_DIR}/mac &>/dev/null
+	mkdir -p ${BUILD_DIR}/mac/include ${BUILD_DIR}/mac/lib
+
+.PHONY:	unmount_framework
+unmount_framework:
+	sudo umount ${BUILD_DIR}/framework
+
+# Unpack the contents of an individual sub-package of the GTK+ bundle.  A slight
+# inconvenience here is that the .pkg files name names like glib.pkg, whereas
+# the .framework directories and some of their contents are like GLib.framework,
+# so we have to use the 'tr' utility to convert upper to lower case.
+${BUILD_DIR}/%.framework:
+	cd ${BUILD_DIR} && \
+	gunzip -c "framework/GTK+ ${GTK_MAJOR} Framework.mpkg/Contents/Packages/`echo $* | tr '[:upper:]' '[:lower:]'`.pkg/Contents/Archive.pax.gz" | pax -r
+	cp -a $@/Headers/* ${BUILD_DIR}/mac/include
+	cp -a $@/Libraries/* ${BUILD_DIR}/mac/lib
+	cp -a $@/Resources/dev/lib/* ${BUILD_DIR}/mac/lib
+	# What the two steps below do is to replace a symlink
+	# with the actual file that's symlinked.
+	rm ${BUILD_DIR}/mac/lib/lib$*.dylib
+	cp -a $@/$* ${BUILD_DIR}/mac/lib/lib$*.dylib
+
+# Combine all the steps of getting and installing the GTK+ bundle.
+${GTK_MAC_BUNDLE}:
+	${MAKE} -f Makefile.common ${GTK_FRAMEWORK}
+	${MAKE} -f Makefile.common ${BUILD_DIR}/framework
+	${MAKE} -f Makefile.common ${BUILD_DIR}/Cairo.framework
+	${MAKE} -f Makefile.common ${BUILD_DIR}/GLib.framework
+	${MAKE} -f Makefile.common ${BUILD_DIR}/Gtk.framework
+	${MAKE} -f Makefile.common unmount_framework
+	tar -C ${BUILD_DIR} -cjf $@ mac
+
+endif
+

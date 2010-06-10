@@ -1,0 +1,299 @@
+# This file contains the official settings used for a default build of
+# the IMCROSS tools (www.sandroid.org/imcross).  If you want to customize
+# your build, then:
+#	1. Copy this file, renaming it Makefile.custom-settings.
+#	2. Change the contents of Makefile.custom-settings as desired.
+# When installing IMCROSS or building IMCROSS sample programs, 
+# Makefile.custom-settings will be used if it exists, and otherwise
+# Makefile.default-settings will be used.  The distinction is that that
+# the latter file will be overwritten the next time you download an 
+# updated version of IMCROSS, whereas your custom file will not be 
+# overwritten.  On the other hand, there could be new variables that 
+# had to be added at that point.		-- Ron Burkey 2008-05-13
+
+# This is the IMCROSS version included in reports and suchlike.  Please
+# modify it by adding a suffix or something, so that we can tell from the
+# reports that your configuration is non-standard!
+IMCROSS_VERSION=20090426
+
+# In some cases, this could be used to speed up the build, if you have
+# multiple cores or CPUs.  It may be used with make's -j switch.
+#PARALLEL_BUILD=3
+
+# The following block of stuff determines where everything is installed.
+#	${PREFIX_WIN32}/bin		This is where links to things like
+#					i386-mingw32-gcc and 
+#					powerpc-apple-darwin8-gcc get put.
+#					It should be in your PATH.
+#	${PREFIX_WIN32}/${TARGET_WIN32}	This is where all the i386-mingw32
+#					executables, libraries, etc., are put.
+#	${JAMMER_DIR}			This is where InstallJammer gets
+#					installed.
+#	${INSTALL_MACOSX}		This is where all othe Mac executables,
+#					libraries, etc., are put.
+# Please set up your PATH to include ${PREFIX_WIN32}/bin *before* doing the 
+# install.
+
+# The only acceptable values for USE_HOME are "yes" (lower case!) or
+# anything else.  Anything other than "yes" is treated as "no" (even
+# if it's all-caps "YES").
+USE_HOME=yes
+
+
+NO_WXWIDGETS=yes
+NO_ALLEGRO=yes
+
+ifeq "$(USE_HOME)" "yes"
+
+# With these settings, everything is installed under ~/IMCROSS/, so no
+# 'sudo' access is needed, because you should have permissions for 
+# everything already.  But you need to get ~/IMCROSS/bin into your
+# PATH before starting the install!
+
+PREFIX_WIN32=${HOME}/IMCROSS
+TARGET_WIN32=i386-mingw32
+JAMMER_DIR=${PREFIX_WIN32}/installjammer
+PREFIX_MAC=${HOME}/IMCROSS
+INSTALL_MACOSX=${PREFIX_MAC}/mac
+# If the directories mentioned above are in places where the user has 
+# permissions, then this stuff can be commented out.
+#SUDOWIN=sudo
+#SUDOJAM=sudo
+#SUDOMAC=sudo
+
+else
+
+# These are all of the original installation locations from when IMCROSS
+# was first released, and they're still the default.  You need to set up
+# 'sudo' access before starting, since all of the installation locations
+# are in /usr and /opt, and so require root permissions.
+
+PREFIX_WIN32=/usr/local
+TARGET_WIN32=i386-mingw32
+JAMMER_DIR=${PREFIX_WIN32}/installjammer
+PREFIX_MAC=/opt
+INSTALL_MACOSX=${PREFIX_MAC}/mac
+# If the directories mentioned above are in places where the user has 
+# permissions, then this stuff can be commented out.
+SUDOWIN=sudo
+SUDOJAM=sudo
+SUDOMAC=sudo
+
+endif
+
+# Make SURE the PATH includes the cross-compiler and what-not.  It has to
+# go *after* the normal PATH, or else things like the native wx-config
+# will be overridden.
+PATH:=${PATH}:${PREFIX_WIN32}/bin:
+
+# I don't think this is ever necessary:
+#LDCONFIG=sudo /sbin/ldconfig
+
+# Apple versioning stuff.  The info comes partly from 
+# 	http://www.opensource.apple.com/darwinsource/
+# partly from looking at the contents of the SDKs themselves,
+# partly from 
+#	http://devs.openttd.org/~truebrain/compile-farm/apple-darwin9.txt
+# and partly from guessing.  (There is no unique answer.)
+# The idea is to try to define a configuration that is 
+# consistent with the selected version of Xcode.
+
+# At present, please use Xcode 3.0 or 3.1.1, as Xcode 2 support is 
+# temporarily broken, and only the Xcode 3 versions mentioned have
+# been tested.
+XCODE_VERSION=3.0
+MACOSX_VERSION=10.4u
+
+ifeq "${XCODE_VERSION}" "2.2.1"
+SDK_CXX_VERSION=4.0.0
+SDK_CXX_LIB=libstdc++.6.0.4.dylib
+CCTOOLS_TYPE=odcctools
+CCTOOLS_VERSION=20060413
+GCC_MACOSX_VER=4.0.1
+GCC_MACOSX=5247
+DARWIN_VERSION=darwin8
+XCODE_OK=yes
+endif
+
+ifeq "${XCODE_VERSION}" "2.5"
+SDK_CXX_VERSION=4.0.0
+SDK_CXX_LIB=libstdc++.6.0.4.dylib
+CCTOOLS_TYPE=odcctools
+CCTOOLS_VERSION=20061117
+GCC_MACOSX_VER=4.0.1
+GCC_MACOSX=5370
+DARWIN_VERSION=darwin8
+XCODE_OK=yes
+endif
+
+ifeq "${XCODE_VERSION}" "3.0"
+XCODE3=yes
+endif
+
+ifeq "${XCODE_VERSION}" "3.1.1"
+XCODE3=yes
+endif
+
+ifndef XCODE3
+XCODE3=no
+endif
+
+ifeq "${XCODE3}" "yes"
+SDK_CXX_VERSION=4.0.0
+SDK_CXX_LIB=libstdc++.6.0.4.dylib
+CCTOOLS_TYPE=odcctools
+CCTOOLS_VERSION=9.2
+CCTOOLS_REV=-r277
+#CCTOOLS_VERSION=LATEST
+GCC_MACOSX_VER=4.0.1
+GCC_MACOSX=5465
+DARWIN_VERSION=darwin9
+WX_XCODE=11
+WX_XCODE_LOCATION=DevToolsJun2008
+XCODE_OK=yes
+endif
+
+ifndef XCODE_OK
+Abort, no recognized XCODE_VERSION defined.
+endif
+
+TARGET_MACOSX=powerpc-apple-${DARWIN_VERSION}
+
+# These are the architectures included in Apple "universal binaries".
+# You could remove one of the two architectures, at the 
+# cost of reducing the portability of your programs, but speeding up
+# compilation.  The linker switch (-Wl,...) is added because without
+# it the binaries don't work on Intel, though they do work on PPC.
+# The presence of -I${INCLUDE_MACOSX} is a workaround for some problems
+# with the Xcode 3 build of IMCROSS.
+TARGETS=-arch i386 -arch ppc -I${INCLUDE_MACOSX} -Wl,-syslibroot,${INSTALL_MACOSX}/SDKs/MacOSX${MACOSX_VERSION}.sdk
+
+# This describes the Linux box on which the tools are being installed.
+BUILD_BOX=i386-linux
+
+# This is a temporary directory under IMCROSS, used to build tools and
+# sample programs.
+BUILD_DIR=temp-cross-compiler-build
+
+# Defining any of the following variables causes the associated core library, 
+# tool, or target system to be skipped at installation time or in building 
+# sample programs.  In the default configuration, many of them are based
+# on whether or not the native version of that feature is installed.
+# (The script 'not_installed' either prints the word "yes" or else prints
+# nothing at all, the latter causing the environment variable to be unset.
+# Any of these things that are left undefined or set to "no" will be undefined
+# later by Makefile.common.
+
+ifndef NO_FORTRAN
+NO_FORTRAN:=$(shell ./not_installed.sh fortran 2>/dev/null)
+endif
+ifndef NO_OBJC
+NO_OBJC:=$(shell ./not_installed.sh objc 2>/dev/null)
+endif
+ifndef NO_MAC
+NO_MAC:=$(shell ./not_installed.sh mac 2>/dev/null)
+endif
+ifndef NO_GTK
+NO_GTK:=$(shell ./not_installed.sh gtk 2>/dev/null)
+endif
+ifndef NO_WXWIDGETS
+NO_WXWIDGETS:=$(shell ./not_installed.sh wxwidgets 2>/dev/null)
+endif
+ifndef NO_FLTK
+NO_FLTK:=$(shell ./not_installed.sh fltk 2>/dev/null)
+endif
+ifndef NO_LIBXML
+NO_LIBXML2:=$(shell ./not_installed.sh libxml2 2>/dev/null)
+endif
+ifndef NO_ALLEGRO
+NO_ALLEGRO:=$(shell ./not_installed.sh allegro 2>/dev/null)
+endif
+ifndef NO_JAMMER
+NO_JAMMER=no
+endif
+#NO_READLINE=yes
+
+# Uncommenting any of the following causes the associated contributed library, 
+# tool, or target system to be skipped at installation time or in building 
+# sample programs.
+ifndef NO_old
+NO_old=yes
+endif
+ifndef NO_SDL
+NO_SDL=yes
+endif
+ifndef NO_libgsf
+NO_libgsf=yes
+endif
+ifndef NO_Qt
+NO_Qt=yes
+endif
+
+# Type of wxWidgets build wanted.  Valid settings are "ansi" and "unicode".
+# Anything else will later be translated to "unicode".  If wxWidgets isn't 
+# installed, the latter code will unset WX_TYPE, which will consequently
+# later be translated to "unicode".
+ifndef WX_TYPE
+WX_TYPE:=$(shell wx-config --selected-config | egrep --only-matching '(ansi)|(unicode)')
+endif
+
+# Tool and library versions.
+BINUTILS_VERSION=2.18
+GCC_WIN32=3.4.6
+LIBXML2_VERSION=2.6.31
+WXVER=2.8
+WXMINOR=9
+# Don't ever use this! 
+#WXSTRCONV=strconv-2008-10-09.cpp
+MINGW_RUNTIME_VERSION=3.14
+W32API_VERSION=3.11
+PCRE_VERSION=7.9
+PTHREADS_W32_VERSION=2-8-0
+ZLIB_VERSION=1.2.3
+#JAMMER_VERSION=1.2.5
+JAMMER_VERSION=1.2.12
+FLTK_VERSION=1.1.9
+LIBICONV_VERSION=1.9.1
+ALLEGRO_VERSION=4.2.2
+READLINE_BUNDLE_VERSION=5.0-1
+# Following stuff is experimental, and I don't include it in the build at the 
+# present time.  Summary:  readline build-from-source doesn't work.  PDcurses
+# does appear to work.  Instead of the readline build-from-source I install
+# a binary bundle.
+READLINE_VERSION=6.0
+CURSES_VERSION=3.4
+
+############################################################
+# Versions associated with GTK+.
+
+# For Win32.
+GLIB_MAJOR=2.18
+GLIB_MINOR=4-1
+GTK_MAJOR=2.14
+GTK_MINOR=7-1
+PANGO_MAJOR=1.22
+PANGO_MINOR=4-1
+ATK_MAJOR=1.24
+ATK_MINOR=0-1
+CAIRO_MAJOR=1.8
+CAIRO_MINOR=6-1
+# zlib is installed separately from gtk+.
+# iconv is installed separately from gtk+.
+GETTEXT_VERSION=0.17-1
+LIBPNG_VERSION=1.2.34-1
+LIBJPEG_VERSION=6b-4
+LIBTIFF_VERSION=3.8.2
+PKGCONFIG_VERSION=0.23-2
+FREETYPE_VERSION=2.3.6
+FONTCONFIG_VERSION=2.4.2-tml-20071015
+EXPAT_VERSION=2.0.0
+# dirent does not seem to *have* a version.
+PROXYLIBINTL_VERSION=20080805
+
+# For Mac.
+GTK_MAC_VERSION=2.14.7-1
+
+#//////////////////////////////////////////////////////////////////
+# DO NOT REMOVE THIS LINE.
+CUSTOMIZED=yes
+

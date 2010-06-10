@@ -1,0 +1,4 @@
+PROJECT(projectwork)
+
+ADD_EXECUTABLE(projectwork main.cpp geometry.h geometry.cpp)
+
