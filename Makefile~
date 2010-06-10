@@ -2,7 +2,7 @@ TARGET_WIN32=${HOME}/IMCROSS/bin/i386-mingw32
 
 all:
 	make projectwork-win.exe
-	make linux
+	make projectwork-linux
 
 projectwork-linux: main.cpp mathhelper.h src/geometry.h src/geometry.cpp
 	g++ -o $@ $^
