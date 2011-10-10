@@ -1,1 +1,0 @@
-/usr/bin/c++     -fPIC CMakeFiles/projectmath-win.dir/main.cpp.o CMakeFiles/projectmath-win.dir/src/geometry.cpp.o CMakeFiles/projectmath-win.dir/src/algebra.cpp.o CMakeFiles/projectmath-win.dir/src/helloworld.cpp.o CMakeFiles/projectmath-win.dir/src/menuSystem.cpp.o  -o projectmath-win -rdynamic 
