@@ -1,0 +1,1 @@
+/usr/bin/c++      CMakeFiles/projectmath.dir/main.cpp.o CMakeFiles/projectmath.dir/src/geometry.cpp.o CMakeFiles/projectmath.dir/src/algebra.cpp.o CMakeFiles/projectmath.dir/src/helloworld.cpp.o CMakeFiles/projectmath.dir/src/menuSystem.cpp.o  -o projectmath -rdynamic 
