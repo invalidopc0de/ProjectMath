@@ -1,5 +1,6 @@
 #include <iostream>
 #include "src/geometry.h"
+#include "src/helloworld.h"
 
 using namespace std;
 
@@ -16,6 +17,7 @@ int main(int argc, char **argv) {
     cout << "7. Solve volume of Cone    \n";
     cout << "8. Solve SurfaceArea of Sphere\n";
     cout << "9. Solve volume of Sphere  \n";
+    cout << "10.Algebra Functions       \n";
     cout << "Selection:";
     int selection;
     cin >> selection;
@@ -103,6 +105,9 @@ int main(int argc, char **argv) {
         cin >> parameter1;
         answer = Sphere_Volume(parameter1, bShowWork);
         cout << "The volume is:" << answer << endl;
+        break;
+      case 10:
+        hmain();
         break;
       default:
 	break;

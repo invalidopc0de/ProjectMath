@@ -7,3 +7,10 @@ main.cpp
 mathhelper.h
 src/geometry.cpp
 src/geometry.h
+README
+src/PolyMenu.h
+src/algebra.h
+src/menuSystem.cpp
+src/helloworld.cpp
+src/algebra.cpp
+src/helloworld.h
